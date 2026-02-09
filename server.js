@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const sequelize = require('./config/database');
-const propertyRoutes = require('./routes/propertyRoutes');
-const inquiryRoutes = require('./routes/inquiryRoutes');
+const propertyRoutes = require('./api/propertyRoutes');
+const inquiryRoutes = require('./api/inquiryRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
