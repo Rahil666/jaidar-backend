@@ -1,27 +1,41 @@
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
+const sequelize = require('./config/database');
+const propertyRoutes = require('./routes/propertyRoutes');
+const inquiryRoutes = require('./routes/inquiryRoutes');
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+app.use(express.json());
 
+// Basic health check route
 app.get('/', (req, res) => {
-  res.status(200).send('Jaidar Backend API is running 🚀');
+    res.status(200).send('Jaidar Backend API is running 🚀');
 });
 
-app.get('/api/properties', async (req, res) => {
-  try {
-    const response = await axios.get('https://api.srminternationalrealestate.ae/api/properties');
-    console.log(response.data);
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error fetching properties:', error.message);
-    res.status(500).json({ error: 'Failed to fetch properties' });
-  }
-});
+// API Routes
+app.use('/api', propertyRoutes);
+app.use('/api', inquiryRoutes);
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
+// Database Connection and Server Start
+const startServer = async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('Database connected...');
+        
+        await sequelize.sync(); 
+        console.log('Models synced...');
+
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+};
+
+startServer();
+
+module.exports = app; // Export for Vercel
