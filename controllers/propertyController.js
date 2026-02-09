@@ -1,7 +1,7 @@
 const axios = require('axios');
 const Property = require('../models/Property');
 
-const isVercel = !!process.env.VERCEL;
+const isCloudEnv = process.env.VERCEL || process.env.RENDER || process.env.NODE_ENV === 'production';
 
 exports.getProperties = async (req, res) => {
     try {
@@ -11,7 +11,7 @@ exports.getProperties = async (req, res) => {
         const propertiesList = apiData.Properties || [];
 
         // Only save to DB if running locally (not on Vercel)
-        if (!isVercel) {
+        if (!isCloudEnv) {
             for (const item of propertiesList) {
                 await Property.upsert({
                     srm_id: item.id,
@@ -42,7 +42,7 @@ exports.getPropertyById = async (req, res) => {
         const { id } = req.params;
 
         // On Vercel: Pure proxy mode - fetch directly from external API
-        if (isVercel) {
+        if (isCloudEnv) {
             try {
                 const response = await axios.get(`https://api.srminternationalrealestate.ae/api/properties/${id}`);
                 return res.json(response.data);

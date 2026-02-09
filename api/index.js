@@ -1,48 +1,59 @@
 const express = require('express');
 const cors = require('cors');
-const sequelize = require('../config/database');
-const propertyRoutes = require('../routes/propertyRoutes');
-const inquiryRoutes = require('../routes/inquiryRoutes');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Check if we're in a cloud environment (no persistent filesystem)
+const isCloudEnv = process.env.VERCEL || process.env.RENDER || process.env.NODE_ENV === 'production';
+
 app.use(cors());
 app.use(express.json());
 
+// Only load sequelize and routes that need DB locally
+let sequelize, propertyRoutes, inquiryRoutes;
+
+try {
+    sequelize = require('../config/database');
+    propertyRoutes = require('../routes/propertyRoutes');
+    inquiryRoutes = require('../routes/inquiryRoutes');
+} catch (error) {
+    console.error('Error loading modules:', error.message);
+}
+
 // Basic health check route
 app.get('/', (req, res) => {
-    res.status(200).send('Jaidar Backend one again back to actionAPI is running 🚀');
+    res.status(200).send('Jaidar Backend API is running 🚀');
 });
 
 // API Routes
-app.use('/api', propertyRoutes);
-app.use('/api', inquiryRoutes);
+if (propertyRoutes) app.use('/api', propertyRoutes);
+if (inquiryRoutes) app.use('/api', inquiryRoutes);
 
-// Database Connection
+// Database Connection (skip in cloud environments with read-only filesystem)
 const initDB = async () => {
+    if (!sequelize) return;
+    
     try {
         await sequelize.authenticate();
         console.log('Database connected...');
         
-        // Sync models only if not on Vercel (read-only filesystem issue)
-        // Or if you use a remote DB like MySQL, you can sync here.
-        if (!process.env.VERCEL) {
+        // Only sync if not in cloud environment
+        if (!isCloudEnv) {
             await sequelize.sync(); 
             console.log('Models synced...');
         }
     } catch (error) {
-        console.error('Database connection error:', error);
+        console.error('Database connection error:', error.message);
     }
 };
 
 initDB();
 
-// Only listen locally, Vercel handles the listener for us
-if (!process.env.VERCEL) {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
-}
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 
-module.exports = app; // Export for Vercel
+module.exports = app;
