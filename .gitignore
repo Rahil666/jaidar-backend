@@ -122,3 +122,6 @@ Thumbs.db
 database.sqlite
 *.db
 *.sqlite
+
+# Local artifacts
+.gemini/
