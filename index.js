@@ -8,7 +8,7 @@ const port = 3000;
 app.use(cors());
 
 app.get('/', (req, res) => {
-  res.send('SRM Real Estate API Proxy is running!');
+  res.status(200).send('Jaidar Backend API is running 🚀');
 });
 
 app.get('/api/properties', async (req, res) => {
