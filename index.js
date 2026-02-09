@@ -19,23 +19,30 @@ app.get('/', (req, res) => {
 app.use('/api', propertyRoutes);
 app.use('/api', inquiryRoutes);
 
-// Database Connection and Server Start
-const startServer = async () => {
+// Database Connection
+const initDB = async () => {
     try {
         await sequelize.authenticate();
         console.log('Database connected...');
         
-        await sequelize.sync(); 
-        console.log('Models synced...');
-
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
+        // Sync models only if not on Vercel (read-only filesystem issue)
+        // Or if you use a remote DB like MySQL, you can sync here.
+        if (!process.env.VERCEL) {
+            await sequelize.sync(); 
+            console.log('Models synced...');
+        }
     } catch (error) {
-        console.error('Unable to connect to the database:', error);
+        console.error('Database connection error:', error);
     }
 };
 
-startServer();
+initDB();
+
+// Only listen locally, Vercel handles the listener for us
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
 
 module.exports = app; // Export for Vercel

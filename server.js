@@ -11,6 +11,9 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.get('/', (req, res) => {
+    res.status(200).send('Jaidar Backend API is running 🚀');
+});
 app.use('/api', propertyRoutes);
 app.use('/api', inquiryRoutes);
 
